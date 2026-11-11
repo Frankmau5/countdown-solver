@@ -2,6 +2,8 @@
 
 An interactive web-based solver for the classic Channel 4 TV game show ***Countdown***, featuring both the **Letters Round** and the **Numbers Round** with authentic studio visuals and animated countdown clocks.
 
+![Countdown Solver Preview](Screenshot.png)
+
 ---
 
 ## Features
