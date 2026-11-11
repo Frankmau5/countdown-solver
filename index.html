@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Solver — Letters & Numbers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Countdown Studio Theme */
+        body {
+            background: radial-gradient(circle at 50% 25%, #1a365d 0%, #050b14 100%);
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* The Board styling */
+        .board-container {
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+            border: 4px solid #475569;
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+            padding: 20px;
+        }
+
+        /* Classic Blue Tiles (Letters) */
+        .tile {
+            width: 8vw;
+            height: 10vw;
+            max-width: 70px;
+            max-height: 90px;
+            min-width: 40px;
+            min-height: 55px;
+            background: linear-gradient(to bottom, #2563eb, #1e40af);
+            border: 2px solid #93c5fd;
+            border-radius: 6px;
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fef08a; /* Iconic yellow text */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.15s;
+            user-select: none;
+        }
+
+        .tile:active {
+            transform: scale(0.95);
+        }
+
+        /* Number Tiles */
+        .num-tile {
+            width: 13vw;
+            height: 15vw;
+            max-width: 82px;
+            max-height: 95px;
+            min-width: 48px;
+            min-height: 60px;
+            background: linear-gradient(to bottom, #2563eb, #1e40af);
+            border: 2.5px solid #93c5fd;
+            border-radius: 8px;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fef08a;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            text-align: center;
+            outline: none;
+            transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .num-tile:focus {
+            border-color: #fde047;
+            box-shadow: 0 0 16px rgba(253, 224, 71, 0.7);
+            transform: translateY(-2px) scale(1.04);
+        }
+
+        .num-tile::placeholder {
+            color: rgba(147, 197, 253, 0.3);
+        }
+
+        /* Buttons */
+        .btn-start {
+            background: linear-gradient(to bottom, #ef4444, #b91c1c);
+            border: 2px solid #fca5a5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            color: white;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .btn-start:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #f87171, #dc2626);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-start:disabled {
+            background: #475569;
+            border-color: #64748b;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-solve-now {
+            background: linear-gradient(to bottom, #0284c7, #0369a1);
+            border: 2px solid #7dd3fc;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            color: white;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .btn-solve-now:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #38bdf8, #0284c7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-solve-now:disabled {
+            background: #475569;
+            border-color: #64748b;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .preset-btn {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid #475569;
+            color: #93c5fd;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 0.45rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.15s ease;
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(145deg, #334155, #1e293b);
+            border-color: #60a5fa;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .chip-btn {
+            background: #1e293b;
+            border: 1px solid #3b82f6;
+            color: #fef08a;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.35rem 0.6rem;
+            border-radius: 0.375rem;
+            transition: all 0.12s ease;
+            user-select: none;
+        }
+
+        .chip-btn:hover {
+            background: #2563eb;
+            color: #ffffff;
+            transform: scale(1.08);
+        }
+
+        .chip-btn-large {
+            border-color: #f59e0b;
+            color: #fde68a;
+            background: #292524;
+        }
+
+        .chip-btn-large:hover {
+            background: #d97706;
+            color: #ffffff;
+        }
+
+        /* Hidden Input to capture mobile/desktop typing seamlessly */
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            left: -1000px;
+        }
+
+        /* Clock Animations */
+        .clock-bg { fill: #e2e8f0; }
+        .clock-border { stroke: #1e3a8a; stroke-width: 8; fill: none; }
+        .clock-sweep { 
+            stroke: #fcd34d; /* Golden sweep */
+            stroke-width: 46; 
+            fill: none;
+            /* Circumference = 2 * PI * r (r=23) ≈ 144.513 */
+            stroke-dasharray: 144.513;
+            stroke-dashoffset: 144.513;
+        }
+        .clock-hand {
+            stroke: #dc2626; /* Red hand */
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+        .clock-center { fill: #1e3a8a; }
+
+        /* Results styling */
+        .word-badge {
+            background: #1e293b;
+            border-left: 4px solid #3b82f6;
+            color: #f8fafc;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-left: 4px solid #38bdf8;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center py-8 px-4">
+
+    <!-- Hidden Input for letters keyboard capture -->
+    <input type="text" id="hidden-input" maxlength="9" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+
+    <!-- Main Header -->
+    <header class="text-center w-full max-w-4xl mb-8">
+        <h1 class="text-4xl md:text-6xl font-black tracking-wider uppercase" style="color: #60a5fa; text-shadow: 0 4px 10px rgba(0,0,0,0.8);">
+            Count<span style="color: #fef08a;">down</span>
+        </h1>
+        <p class="text-slate-300 font-medium tracking-wide mt-1">Full Solver: Letters & Numbers Rounds</p>
+        <p id="status-text" class="text-slate-400 mt-1 font-mono text-xs">Initializing dictionary...</p>
+
+        <!-- Quick Jump Bar -->
+        <div class="flex justify-center gap-3 mt-4">
+            <a href="#letters-section" class="px-4 py-1.5 rounded-full bg-blue-900/60 hover:bg-blue-800 border border-blue-500/40 text-blue-200 text-xs font-semibold uppercase tracking-wider transition">
+                🔤 Letters Round
+            </a>
+            <a href="#numbers-section" class="px-4 py-1.5 rounded-full bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 text-amber-200 text-xs font-semibold uppercase tracking-wider transition">
+                🔢 Numbers Round
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="w-full max-w-4xl flex flex-col items-center gap-12">
+        
+        <!-- ========================================== -->
+        <!-- 1. LETTERS ROUND SECTION                  -->
+        <!-- ========================================== -->
+        <section id="letters-section" class="w-full flex flex-col items-center gap-6 scroll-mt-6">
+            
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 bg-blue-950/90 border border-blue-500/40 text-blue-300 rounded-full text-xs font-bold uppercase tracking-widest">Round 1</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-blue-100 tracking-wide">Letters Game</h2>
+            </div>
+
+            <!-- The Letter Board -->
+            <div class="board-container flex flex-wrap justify-center gap-2 md:gap-4 w-full cursor-pointer" id="letters-board">
+                <!-- 9 Tiles generated by JS -->
+                <div class="tile" id="tile-0"></div>
+                <div class="tile" id="tile-1"></div>
+                <div class="tile" id="tile-2"></div>
+                <div class="tile" id="tile-3"></div>
+                <div class="tile" id="tile-4"></div>
+                <div class="tile" id="tile-5"></div>
+                <div class="tile" id="tile-6"></div>
+                <div class="tile" id="tile-7"></div>
+                <div class="tile" id="tile-8"></div>
+            </div>
+            
+            <!-- Quick letter tools -->
+            <div class="flex flex-wrap items-center justify-between gap-3 w-full px-2 text-xs">
+                <span class="text-slate-400 uppercase tracking-widest">Click the board to type up to 9 letters</span>
+                <div class="flex gap-2">
+                    <button id="btn-random-letters" type="button" class="preset-btn">
+                        🎲 Random 9 Letters
+                    </button>
+                    <button id="btn-clear-letters" type="button" class="preset-btn text-rose-300 border-rose-900/50 hover:border-rose-500">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Letters Controls & Clock Row -->
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full">
+                
+                <!-- The Iconic Clock (Letters) -->
+                <div class="relative drop-shadow-2xl">
+                    <svg width="180" height="180" viewBox="0 0 100 100">
+                        <circle class="clock-bg" cx="50" cy="50" r="46"/>
+                        <circle cx="50" cy="50" r="40" stroke="#cbd5e1" stroke-width="1" fill="none" stroke-dasharray="2 4"/>
+                        <circle cx="50" cy="50" r="46" class="clock-border"/>
+                        <circle class="clock-sweep" id="clock-sweep" cx="50" cy="50" r="23" transform="rotate(-90 50 50)"/>
+                        <line class="clock-hand" id="clock-hand" x1="50" y1="50" x2="50" y2="15" transform="rotate(0 50 50)"/>
+                        <circle class="clock-center" cx="50" cy="50" r="4"/>
+                    </svg>
+                </div>
+
+                <!-- Letters Action Button -->
+                <button id="start-btn" class="btn-start px-10 py-5 text-xl rounded-lg shadow-xl disabled:opacity-50" disabled>
+                    Start Clock (25s)
+                </button>
+            </div>
+
+            <!-- Results Section (Dictionary Corner) -->
+            <div id="results-container" class="mt-4 hidden w-full bg-slate-900/90 p-6 rounded-xl border border-slate-700 backdrop-blur-sm shadow-2xl">
+                <h3 class="text-3xl font-bold mb-6 text-center text-blue-400 border-b border-slate-700 pb-4">
+                    Dictionary Corner
+                </h3>
+                <div id="results-list" class="flex flex-col gap-6 w-full">
+                    <!-- Word groups will be injected here via JS -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION DIVIDER                            -->
+        <!-- ========================================== -->
+        <div class="w-full border-t-2 border-slate-700/80 my-2 relative flex items-center justify-center">
+            <span class="bg-slate-900 px-6 py-1.5 text-amber-400 font-black uppercase tracking-widest text-sm border border-slate-700 rounded-full shadow-lg">
+                Numbers Game
+            </span>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 2. NUMBERS ROUND SECTION                  -->
+        <!-- ========================================== -->
+        <section id="numbers-section" class="w-full flex flex-col items-center gap-6 scroll-mt-6">
+            
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 bg-amber-950/90 border border-amber-500/40 text-amber-300 rounded-full text-xs font-bold uppercase tracking-widest">Round 2</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-amber-100 tracking-wide">Numbers Game</h2>
+            </div>
+
+            <!-- Target Number Digital Box -->
+            <div class="flex flex-col items-center gap-2">
+                <span class="text-xs uppercase tracking-widest text-slate-400 font-bold">Target Number (101 – 999)</span>
+                <div class="bg-black/95 border-4 border-amber-500/80 rounded-xl px-6 py-2 shadow-[0_0_25px_rgba(245,158,11,0.3)] flex items-center justify-center">
+                    <input type="number" id="num-target" min="101" max="999" placeholder="952"
+                        class="w-36 bg-transparent text-amber-400 font-mono text-4xl md:text-5xl font-black text-center tracking-widest outline-none focus:text-yellow-300">
+                </div>
+            </div>
+
+            <!-- The 6 Number Tiles Board -->
+            <div class="board-container flex flex-wrap justify-center gap-2 md:gap-4 w-full" id="numbers-board">
+                <input type="text" inputmode="numeric" id="num-tile-0" class="num-tile" placeholder="-" maxlength="3" autocomplete="off">
+                <input type="text" inputmode="numeric" id="num-tile-1" class="num-tile" placeholder="-" maxlength="3" autocomplete="off">
+                <input type="text" inputmode="numeric" id="num-tile-2" class="num-tile" placeholder="-" maxlength="3" autocomplete="off">
+                <input type="text" inputmode="numeric" id="num-tile-3" class="num-tile" placeholder="-" maxlength="3" autocomplete="off">
+                <input type="text" inputmode="numeric" id="num-tile-4" class="num-tile" placeholder="-" maxlength="3" autocomplete="off">
+                <input type="text" inputmode="numeric" id="num-tile-5" class="num-tile" placeholder="-" maxlength="3" autocomplete="off">
+            </div>
+
+            <!-- Number Chips Tray (Click to add to next available tile) -->
+            <div class="w-full px-2">
+                <div class="bg-slate-900/70 p-3 rounded-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                        <span class="text-amber-400 font-bold uppercase tracking-wider text-[11px] mr-1">Large:</span>
+                        <button type="button" class="chip-btn chip-btn-large" onclick="addNumberChip(25)">25</button>
+                        <button type="button" class="chip-btn chip-btn-large" onclick="addNumberChip(50)">50</button>
+                        <button type="button" class="chip-btn chip-btn-large" onclick="addNumberChip(75)">75</button>
+                        <button type="button" class="chip-btn chip-btn-large" onclick="addNumberChip(100)">100</button>
+                    </div>
+                    <div class="flex items-center gap-1 flex-wrap justify-center">
+                        <span class="text-blue-300 font-bold uppercase tracking-wider text-[11px] mr-1">Small:</span>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(1)">1</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(2)">2</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(3)">3</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(4)">4</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(5)">5</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(6)">6</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(7)">7</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(8)">8</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(9)">9</button>
+                        <button type="button" class="chip-btn" onclick="addNumberChip(10)">10</button>
+                        <button type="button" class="chip-btn bg-rose-950 text-rose-300 border-rose-800 hover:bg-rose-900 ml-2" onclick="clearNumbers()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Numbers Controls & Clock Row -->
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full mt-2">
+                
+                <!-- The Iconic Clock (Numbers Round) -->
+                <div class="relative drop-shadow-2xl">
+                    <svg width="180" height="180" viewBox="0 0 100 100">
+                        <circle class="clock-bg" cx="50" cy="50" r="46"/>
+                        <circle cx="50" cy="50" r="40" stroke="#cbd5e1" stroke-width="1" fill="none" stroke-dasharray="2 4"/>
+                        <circle cx="50" cy="50" r="46" class="clock-border"/>
+                        <circle class="clock-sweep" id="num-clock-sweep" cx="50" cy="50" r="23" transform="rotate(-90 50 50)"/>
+                        <line class="clock-hand" id="num-clock-hand" x1="50" y1="50" x2="50" y2="15" transform="rotate(0 50 50)"/>
+                        <circle class="clock-center" cx="50" cy="50" r="4"/>
+                    </svg>
+                </div>
+
+                <!-- Numbers Action Button -->
+                <button id="num-start-btn" class="btn-start px-10 py-5 text-xl rounded-lg shadow-xl disabled:opacity-50">
+                    Start Clock (30s)
+                </button>
+
+            </div>
+
+            <!-- Results Section (Rachel's Board) -->
+            <div id="num-results-container" class="mt-4 hidden w-full bg-slate-900/90 p-6 rounded-xl border border-slate-700 backdrop-blur-sm shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
+                    <div>
+                        <h3 class="text-3xl font-bold text-amber-400">Rachel's Board</h3>
+                        <p class="text-xs text-slate-400 mt-1 font-mono">Numbers Game Solution Breakdown</p>
+                    </div>
+                    <div id="num-solutions-nav" class="flex gap-2"></div>
+                </div>
+
+                <!-- Outcome summary badge -->
+                <div id="num-summary-badge" class="mb-6"></div>
+
+                <!-- Step-by-step arithmetic -->
+                <div id="num-steps-list" class="flex flex-col gap-3 w-full"></div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 text-center text-slate-500 text-xs">
+        <p>Countdown Letters & Numbers Game Solver</p>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC                           -->
+    <!-- ========================================== -->
+    <script>
+        // ==========================================
+        // 1. LETTERS ROUND LOGIC
+        // ==========================================
+        const hiddenInput = document.getElementById('hidden-input');
+        const tiles = Array.from({length: 9}, (_, i) => document.getElementById(`tile-${i}`));
+        const startBtn = document.getElementById('start-btn');
+        const clearLettersBtn = document.getElementById('btn-clear-letters');
+        const randomLettersBtn = document.getElementById('btn-random-letters');
+        const statusText = document.getElementById('status-text');
+        const clockSweep = document.getElementById('clock-sweep');
+        const clockHand = document.getElementById('clock-hand');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsList = document.getElementById('results-list');
+        const lettersBoard = document.getElementById('letters-board');
+
+        let dictionary = [];
+        let isLettersPlaying = false;
+        let letterAnimFrame = null;
+        
+        const LETTER_DURATION = 25000; // 25 seconds
+        const CIRCUMFERENCE = 144.513; // Pre-calculated for r=23
+
+        // Fetch dictionary (local first for instant offline use, remote fallback)
+        async function fetchDictionary() {
+            try {
+                statusText.innerText = "Loading dictionary...";
+                let text = '';
+                try {
+                    const localRes = await fetch('words.txt');
+                    if (localRes.ok) text = await localRes.text();
+                } catch {
+                    // Fallback to remote if local is inaccessible
+                }
+
+                if (!text) {
+                    const response = await fetch('https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt');
+                    text = await response.text();
+                }
+                
+                dictionary = text.split('\n')
+                    .map(word => word.trim().toLowerCase())
+                    .filter(word => word.length > 2 && word.length <= 9);
+                
+                statusText.innerText = `${dictionary.length.toLocaleString()} Oxford (OED) words loaded.`;
+                hiddenInput.disabled = false;
+                startBtn.disabled = false;
+            } catch (error) {
+                console.error("Dictionary error:", error);
+                statusText.innerText = "Error loading dictionary. Check connection.";
+            }
+        }
+
+        // Typing letters
+        hiddenInput.addEventListener('input', (e) => {
+            if (isLettersPlaying) {
+                e.target.value = e.target.value.substring(0, e.target.value.length - 1); 
+                return;
+            }
+            let val = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+            e.target.value = val;
+            for (let i = 0; i < 9; i++) {
+                tiles[i].innerText = val[i] || '';
+            }
+        });
+
+        // Click letter board to focus
+        lettersBoard.addEventListener('click', () => {
+            if (!isLettersPlaying) hiddenInput.focus();
+        });
+
+        // Clear letters
+        clearLettersBtn.addEventListener('click', () => {
+            hiddenInput.value = '';
+            tiles.forEach(t => t.innerText = '');
+            resultsContainer.classList.add('hidden');
+            clockSweep.style.strokeDashoffset = CIRCUMFERENCE;
+            clockHand.setAttribute('transform', 'rotate(0 50 50)');
+        });
+
+        // Random letters (standard Countdown frequency)
+        randomLettersBtn.addEventListener('click', () => {
+            const vowels = 'AAAAAAAAAAAAEEEEEEEEEEEEEEEEEEIIIIIIIIIIDOOOOOOOOOOOOOOUUUUU'.split('');
+            const consonants = 'BBCCCCDDDDDFFGGGHHJKLLLLMMNNNNNNPPPQRRRRRRRRSSSSTTTTTTVVWXYZ'.split('');
+            
+            // Choose 4 vowels and 5 consonants
+            const chosen = [];
+            for (let i = 0; i < 4; i++) {
+                chosen.push(vowels[Math.floor(Math.random() * vowels.length)]);
+            }
+            for (let i = 0; i < 5; i++) {
+                chosen.push(consonants[Math.floor(Math.random() * consonants.length)]);
+            }
+            // Shuffle
+            chosen.sort(() => Math.random() - 0.5);
+            const str = chosen.join('');
+            hiddenInput.value = str;
+            for (let i = 0; i < 9; i++) {
+                tiles[i].innerText = str[i] || '';
+            }
+        });
+
+        // Letters solving algorithm
+        function solveLetters(letters) {
+            letters = letters.toLowerCase();
+            const availableCounts = {};
+            for (let char of letters) {
+                availableCounts[char] = (availableCounts[char] || 0) + 1;
+            }
+
+            const foundWords = [];
+            for (let i = 0; i < dictionary.length; i++) {
+                const word = dictionary[i];
+                if (word.length > letters.length) continue;
+
+                let canForm = true;
+                const tempCounts = { ...availableCounts };
+                for (let j = 0; j < word.length; j++) {
+                    const char = word[j];
+                    if (!tempCounts[char] || tempCounts[char] === 0) {
+                        canForm = false;
+                        break;
+                    }
+                    tempCounts[char]--;
+                }
+                if (canForm) foundWords.push(word);
+            }
+
+            const grouped = {};
+            foundWords.forEach(word => {
+                const len = word.length;
+                if (!grouped[len]) grouped[len] = [];
+                grouped[len].push(word);
+            });
+
+            for (let len in grouped) grouped[len].sort();
+            return grouped;
+        }
+
+        // Render Letters Results
+        function displayLetterResults(grouped) {
+            resultsList.innerHTML = '';
+            const lengths = Object.keys(grouped).map(Number).sort((a, b) => b - a);
+
+            if (lengths.length === 0) {
+                resultsList.innerHTML = `<p class="text-center italic text-xl text-red-400">No valid words found.</p>`;
+            } else {
+                lengths.forEach(len => {
+                    const groupDiv = document.createElement('div');
+                    const header = document.createElement('h3');
+                    header.className = "text-xl font-bold mb-3 text-blue-300";
+                    header.innerText = `${len}-Letter Words (${grouped[len].length})`;
+                    groupDiv.appendChild(header);
+
+                    const wordsContainer = document.createElement('div');
+                    wordsContainer.className = "flex flex-wrap gap-2";
+
+                    const wordsToShow = grouped[len].slice(0, 30);
+                    wordsToShow.forEach(word => {
+                        const tag = document.createElement('span');
+                        tag.className = "word-badge px-4 py-2 rounded shadow text-sm md:text-base font-medium tracking-wide uppercase";
+                        tag.innerText = word;
+                        wordsContainer.appendChild(tag);
+                    });
+
+                    if (grouped[len].length > 30) {
+                        const moreTag = document.createElement('span');
+                        moreTag.className = "px-4 py-2 text-slate-400 text-sm italic flex items-center";
+                        moreTag.innerText = `+ ${grouped[len].length - 30} more`;
+                        wordsContainer.appendChild(moreTag);
+                    }
+
+                    groupDiv.appendChild(wordsContainer);
+                    resultsList.appendChild(groupDiv);
+                });
+            }
+
+            resultsContainer.classList.remove('hidden');
+            setTimeout(() => {
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        // Letters Clock & Solve
+        function startLettersTimer() {
+            const letters = hiddenInput.value;
+            if (letters.length < 3) {
+                alert("Please enter at least 3 letters!");
+                hiddenInput.focus();
+                return;
+            }
+
+            isLettersPlaying = true;
+            startBtn.disabled = true;
+            hiddenInput.disabled = true;
+            resultsContainer.classList.add('hidden');
+            
+            clockSweep.style.strokeDashoffset = CIRCUMFERENCE;
+            clockHand.setAttribute('transform', 'rotate(0 50 50)');
+
+            const startTime = Date.now();
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                let progress = Math.min(elapsed / LETTER_DURATION, 1);
+                
+                clockSweep.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+                clockHand.setAttribute('transform', `rotate(${progress * 360} 50 50)`);
+
+                if (progress < 1) {
+                    letterAnimFrame = requestAnimationFrame(animate);
+                } else {
+                    isLettersPlaying = false;
+                    startBtn.disabled = false;
+                    startBtn.innerText = "Restart Clock";
+                    hiddenInput.disabled = false;
+                    
+                    const results = solveLetters(letters);
+                    displayLetterResults(results);
+                }
+            }
+
+            letterAnimFrame = requestAnimationFrame(animate);
+        }
+
+        startBtn.addEventListener('click', startLettersTimer);
+
+
+        // ==========================================
+        // 2. NUMBERS ROUND LOGIC
+        // ==========================================
+        const numTiles = Array.from({length: 6}, (_, i) => document.getElementById(`num-tile-${i}`));
+        const numTargetInput = document.getElementById('num-target');
+        const numStartBtn = document.getElementById('num-start-btn');
+        const numClockSweep = document.getElementById('num-clock-sweep');
+        const numClockHand = document.getElementById('num-clock-hand');
+        const numResultsContainer = document.getElementById('num-results-container');
+        const numSummaryBadge = document.getElementById('num-summary-badge');
+        const numStepsList = document.getElementById('num-steps-list');
+        const numSolutionsNav = document.getElementById('num-solutions-nav');
+
+        let isNumbersPlaying = false;
+        let numAnimFrame = null;
+        let currentNumberSolutions = [];
+        let currentBestDiff = 0;
+        let currentTargetVal = 0;
+
+        const NUMBER_DURATION = 30000; // 30 seconds standard Countdown
+
+        // Tile input navigation (Auto-advance on typing numbers)
+        numTiles.forEach((tile, index) => {
+            tile.addEventListener('input', (e) => {
+                let clean = e.target.value.replace(/\D/g, '');
+                e.target.value = clean;
+                // Auto-advance if 3 digits (e.g. 100), or complete Countdown 2-digit number (25, 50, 75)
+                if (clean.length >= 3 || ['25', '50', '75'].includes(clean)) {
+                    if (index < 5 && numTiles[index + 1].value === '') {
+                        numTiles[index + 1].focus();
+                    }
+                }
+            });
+
+            tile.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && tile.value === '' && index > 0) {
+                    numTiles[index - 1].focus();
+                } else if (e.key === ' ' || e.key === 'Tab') {
+                    if (index < 5) {
+                        e.preventDefault();
+                        numTiles[index + 1].focus();
+                    }
+                } else if (e.key === 'ArrowRight' && index < 5) {
+                    numTiles[index + 1].focus();
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    numTiles[index - 1].focus();
+                } else if (e.key === 'Enter') {
+                    if (index < 5) numTiles[index + 1].focus();
+                    else startNumbersTimer();
+                }
+            });
+
+            // Handle pasting multiple numbers (e.g. "25 50 75 100 3 6")
+            tile.addEventListener('paste', (e) => {
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                const parts = text.match(/\d+/g);
+                if (parts && parts.length > 1) {
+                    e.preventDefault();
+                    parts.slice(0, 6 - index).forEach((val, offset) => {
+                        if (index + offset < 6) {
+                            numTiles[index + offset].value = val;
+                        }
+                    });
+                    const nextIdx = Math.min(5, index + parts.length);
+                    numTiles[nextIdx].focus();
+                }
+            });
+        });
+
+        // Chip button helper
+        window.addNumberChip = function(num) {
+            if (isNumbersPlaying) return;
+            for (let i = 0; i < 6; i++) {
+                if (!numTiles[i].value) {
+                    numTiles[i].value = num;
+                    if (i < 5) numTiles[i + 1].focus();
+                    return;
+                }
+            }
+            numTiles[5].value = num;
+        };
+
+        window.clearNumbers = function() {
+            if (isNumbersPlaying) return;
+            numTiles.forEach(t => t.value = '');
+            numTargetInput.value = '';
+            numResultsContainer.classList.add('hidden');
+            numClockSweep.style.strokeDashoffset = CIRCUMFERENCE;
+            numClockHand.setAttribute('transform', 'rotate(0 50 50)');
+        };
+
+        // Get current numbers from tiles
+        function getNumbersInput() {
+            const raw = numTiles.map(t => parseInt(t.value, 10)).filter(n => !isNaN(n) && n > 0);
+            return raw;
+        }
+
+        // ==========================================
+        // FAST BFS COUNTDOWN NUMBERS SOLVER
+        // ==========================================
+        function solveNumbersBFS(numbers, target) {
+            if (!numbers || numbers.length < 2 || !target) return null;
+
+            let best = null;
+            let bestDiff = Infinity;
+            const solutions = [];
+            const seen = new Set();
+
+            // Direct match check
+            for (const n of numbers) {
+                const d = Math.abs(n - target);
+                if (d < bestDiff) {
+                    bestDiff = d;
+                    best = { val: n, steps: [] };
+                }
+                if (d === 0) return { best, bestDiff: 0, solutions: [best] };
+            }
+
+            let queue = [numbers.map(n => ({ val: n, steps: [] }))];
+
+            while (queue.length > 0) {
+                const nextQueue = [];
+                let exactFound = false;
+
+                for (const nums of queue) {
+                    if (nums.length <= 1) continue;
+                    const nLen = nums.length;
+
+                    for (let i = 0; i < nLen; i++) {
+                        for (let j = 0; j < nLen; j++) {
+                            if (i === j) continue;
+                            const a = nums[i];
+                            const b = nums[j];
+
+                            const tryOp = (res, expr) => {
+                                const diff = Math.abs(res - target);
+                                const item = { val: res, steps: [...a.steps, ...b.steps, expr] };
+                                
+                                if (diff < bestDiff) {
+                                    bestDiff = diff;
+                                    best = item;
+                                }
+                                if (diff === 0) {
+                                    const key = item.steps.join(';');
+                                    if (!solutions.some(s => s.steps.join(';') === key)) {
+                                        solutions.push(item);
+                                    }
+                                    exactFound = true;
+                                }
+
+                                if (nLen > 2) {
+                                    const nextState = [];
+                                    for (let k = 0; k < nLen; k++) {
+                                        if (k !== i && k !== j) nextState.push(nums[k]);
+                                    }
+                                    nextState.push(item);
+                                    const stateKey = nextState.map(x => x.val).sort((x, y) => x - y).join(',');
+                                    if (!seen.has(stateKey)) {
+                                        seen.add(stateKey);
+                                        nextQueue.push(nextState);
+                                    }
+                                }
+                            };
+
+                            // Commutative: Addition & Multiplication
+                            if (i < j) {
+                                tryOp(a.val + b.val, `${Math.max(a.val, b.val)} + ${Math.min(a.val, b.val)} = ${a.val + b.val}`);
+                                if (a.val > 1 && b.val > 1) {
+                                    tryOp(a.val * b.val, `${Math.max(a.val, b.val)} × ${Math.min(a.val, b.val)} = ${a.val * b.val}`);
+                                }
+                            }
+
+                            // Non-commutative: Subtraction & Division
+                            if (a.val > b.val) {
+                                tryOp(a.val - b.val, `${a.val} - ${b.val} = ${a.val - b.val}`);
+                            }
+                            if (b.val > 1 && a.val % b.val === 0) {
+                                tryOp(a.val / b.val, `${a.val} ÷ ${b.val} = ${a.val / b.val}`);
+                            }
+                        }
+                    }
+                }
+
+                // If exact solutions found at current depth, stop BFS
+                if (exactFound && solutions.length >= 3) break;
+                queue = nextQueue;
+            }
+
+            return { best, bestDiff, solutions };
+        }
+
+        // Render Numbers Result
+        function renderNumberSolution(solutionIndex) {
+            const sol = currentNumberSolutions[solutionIndex] || currentNumberSolutions[0];
+            if (!sol) return;
+
+            // Highlight active tab if multiple
+            const navButtons = numSolutionsNav.querySelectorAll('button');
+            navButtons.forEach((btn, idx) => {
+                if (idx === solutionIndex) {
+                    btn.className = "px-3 py-1 bg-amber-500 text-slate-950 font-bold rounded text-xs";
+                } else {
+                    btn.className = "px-3 py-1 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded text-xs";
+                }
+            });
+
+            numStepsList.innerHTML = '';
+
+            if (sol.steps.length === 0) {
+                numStepsList.innerHTML = `
+                    <div class="step-badge p-4 rounded-lg flex items-center justify-between">
+                        <span class="text-amber-200 font-mono text-lg font-bold">Number ${sol.val} was already in chosen tiles!</span>
+                    </div>`;
+                return;
+            }
+
+            sol.steps.forEach((step, idx) => {
+                const card = document.createElement('div');
+                card.className = "step-badge px-5 py-3.5 rounded-lg flex items-center justify-between border border-slate-700/60";
+                card.innerHTML = `
+                    <span class="text-xs font-mono text-slate-400 uppercase tracking-widest font-semibold">Step ${idx + 1}</span>
+                    <span class="text-lg md:text-xl font-mono font-bold text-amber-200 tracking-wide">${step}</span>
+                `;
+                numStepsList.appendChild(card);
+            });
+        }
+
+        function displayNumberResults(res, target) {
+            currentTargetVal = target;
+            currentBestDiff = res.bestDiff;
+            currentNumberSolutions = res.solutions.length > 0 ? res.solutions : [res.best];
+
+            // Setup navigation tabs if multiple solutions
+            numSolutionsNav.innerHTML = '';
+            if (currentNumberSolutions.length > 1 && currentBestDiff === 0) {
+                currentNumberSolutions.slice(0, 4).forEach((_, idx) => {
+                    const btn = document.createElement('button');
+                    btn.innerText = `Solution ${idx + 1}`;
+                    btn.onclick = () => renderNumberSolution(idx);
+                    numSolutionsNav.appendChild(btn);
+                });
+            }
+
+            // Summary badge
+            if (currentBestDiff === 0) {
+                numSummaryBadge.innerHTML = `
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 shadow-lg">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🎯</span>
+                            <div>
+                                <h4 class="text-xl font-black text-emerald-300">Exact Target Reached!</h4>
+                                <p class="text-xs text-emerald-400 font-mono">Target: ${target} • Shortest Solution: ${currentNumberSolutions[0].steps.length} steps</p>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-emerald-400 tracking-wider">${target}</div>
+                    </div>
+                `;
+            } else {
+                numSummaryBadge.innerHTML = `
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-amber-950/70 border border-amber-500/50 shadow-lg">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">⚡</span>
+                            <div>
+                                <h4 class="text-xl font-black text-amber-300">Closest Possible: ${res.best.val}</h4>
+                                <p class="text-xs text-amber-400 font-mono">Target: ${target} • Difference: ${currentBestDiff} (${res.best.steps.length} steps)</p>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-amber-400 tracking-wider">${res.best.val}</div>
+                    </div>
+                `;
+            }
+
+            renderNumberSolution(0);
+
+            numResultsContainer.classList.remove('hidden');
+            setTimeout(() => {
+                numResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        // Numbers Clock & Solve
+        function startNumbersTimer() {
+            const numbers = getNumbersInput();
+            const target = parseInt(numTargetInput.value, 10);
+
+            if (numbers.length < 2) {
+                alert("Please enter at least 2 numbers (standard game uses 6)!");
+                numTiles[0].focus();
+                return;
+            }
+            if (isNaN(target) || target < 101 || target > 999) {
+                alert("Please enter a 3-digit target number between 101 and 999!");
+                numTargetInput.focus();
+                return;
+            }
+
+            isNumbersPlaying = true;
+            numStartBtn.disabled = true;
+            numTiles.forEach(t => t.disabled = true);
+            numTargetInput.disabled = true;
+            numResultsContainer.classList.add('hidden');
+
+            numClockSweep.style.strokeDashoffset = CIRCUMFERENCE;
+            numClockHand.setAttribute('transform', 'rotate(0 50 50)');
+
+            const startTime = Date.now();
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                let progress = Math.min(elapsed / NUMBER_DURATION, 1);
+
+                numClockSweep.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+                numClockHand.setAttribute('transform', `rotate(${progress * 360} 50 50)`);
+
+                if (progress < 1) {
+                    numAnimFrame = requestAnimationFrame(animate);
+                } else {
+                    isNumbersPlaying = false;
+                    numStartBtn.disabled = false;
+                    numTiles.forEach(t => t.disabled = false);
+                    numTargetInput.disabled = false;
+                    numStartBtn.innerText = "Restart Clock";
+
+                    const res = solveNumbersBFS(numbers, target);
+                    displayNumberResults(res, target);
+                }
+            }
+
+            numAnimFrame = requestAnimationFrame(animate);
+        }
+
+        numStartBtn.addEventListener('click', startNumbersTimer);
+
+        // Auto-initialize dictionary on load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDictionary();
+        });
+    </script>
+</body>
+</html>
